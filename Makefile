@@ -1,39 +1,63 @@
 TAG ?= $(shell git rev-parse --short HEAD)
-REPO_URL ?= $(shell cd terraform/&&terraform output -json ecr_module | jq .ecr | jq -r .repository_url)
+REPO_URL ?= $(shell docker-compose run --rm terraform -chdir=./terraform output -json ecr_module | docker-compose run --rm jq .ecr | docker-compose run --rm jq -r .repository_url)
 CONTAINER_NAME ?= webapp
-RUNNER ?= docker-compose run --rm 3m
-BUCKET_NAME?=
-TAG ?= $(shell git rev-parse --short HEAD)
-REPO_URL ?= $(shell terraform output -json ecr_module | jq .ecr | jq -r .repository_url)
-CONTAINER_NAME ?= webapp
+COMPOSE_RUN_TERRAFORM ?= docker-compose run --rm terraform
+COMPOSE_RUN_AWS ?= docker-compose run --rm aws
+acm_cert_arn= ?=
+AWS_ACCESS_KEY_ID ?=
+AWS_SECRET_ACCESS_KEY ?=
+domain_name ?=
+hosted_zone_id ?=
+ssh_allowed_cidr ?=
+tf_backend_bucket ?=
+
+
+# TAG ?= $(shell git rev-parse --short HEAD)
+# REPO_URL ?= $(shell terraform output -json ecr_module | jq .ecr | jq -r .repository_url)
+# CONTAINER_NAME ?= webapp
+
+.PHONY: login
+login:
+	@echo "🏗Retrieving an authentication token and authenticate your Docker client to your registry"
+	$(COMPOSE_RUN_AWS) ecr get-login-password --region ap-southeast-2 | docker login --username AWS --password-stdin ${REPO_URL}
+
+.PHONY: build
+build:
+	@echo "🏷️📦🏗️Building and tagging container..."
+	docker build --tag ${REPO_URL}:${TAG} .
+
+.PHONY: publish
+publish:
+	@echo "🚀📦⛅Pushing container..."
+	docker push ${REPO_URL}:${TAG}
 
 .PHONY: init
 init:
 	@echo "🏁🚥 Initializing...."
-	$(RUNNER) terraform -chdir=./terraform init -backend-config="bucket=${tf_backend_bucket}"
+	AWS_ACCESS_KEY_ID=$(AWS_ACCESS_KEY_ID) AWS_SECRET_ACCESS_KEY=$(AWS_SECRET_ACCESS_KEY) $(COMPOSE_RUN_TERRAFORM) -chdir=./terraform init -backend-config="bucket=${tf_backend_bucket}"
 
 .PHONY: plan
 plan:
 	@echo "🌏🚜Planning...."
-	$(RUNNER) terraform -chdir=./terraform plan -out tf.plan -var 'app_image=${REPO_URL}' -var 'image_tag=${TAG}' -var 'hosted_zone_id=${hosted_zone_id}' -var 'domain_name=${domain_name}' -var 'acm_cert_arn=${acm_cert_arn}' -var 'ssh_allowed_cidr=${ssh_allowed_cidr}'
-	$(RUNNER) aws s3 cp tf.plan s3://${tf_backend_bucket}/
+	$(COMPOSE_RUN_TERRAFORM) -chdir=./terraform plan -out tf.plan -var 'app_image=${REPO_URL}' -var 'image_tag=${TAG}' -var 'hosted_zone_id=${hosted_zone_id}' -var 'domain_name=${domain_name}' -var 'acm_cert_arn=${acm_cert_arn}' -var 'ssh_allowed_cidr=${ssh_allowed_cidr}'
+	$(COMPOSE_RUN_AWS) aws s3 cp tf.plan s3://${tf_backend_bucket}/
 
 .PHONY: apply
 apply:
 	@echo "⛅🌏🏗️Applying...."
-	$(RUNNER) aws s3 cp s3://${tf_backend_bucket}/tf.plan .
-	$(RUNNER) terraform -chdir=./terraform apply -auto-approve "tf.plan"
+	$(COMPOSE_RUN_AWS) aws s3 cp s3://${tf_backend_bucket}/tf.plan .
+	$(COMPOSE_RUN_TERRAFORM) -chdir=./terraform apply -auto-approve "tf.plan"
 
 .PHONY: deploy-wp
 deploy-wp:
 	@echo "📦🏗️⛅Deploying Wordpress customized image..."
-	$(RUNNER) terraform -chdir=./terraform apply -auto-approve -var 'app_image=${REPO_URL}' -var 'image_tag=${TAG}' -var 'hosted_zone_id=${hosted_zone_id}' -var 'domain_name=${domain_name}' -var 'acm_cert_arn=${acm_cert_arn}' -var 'ssh_allowed_cidr=${ssh_allowed_cidr}'
+	$(COMPOSE_RUN_TERRAFORM) -chdir=./terraform apply -auto-approve -var 'app_image=${REPO_URL}' -var 'image_tag=${TAG}' -var 'hosted_zone_id=${hosted_zone_id}' -var 'domain_name=${domain_name}' -var 'acm_cert_arn=${acm_cert_arn}' -var 'ssh_allowed_cidr=${ssh_allowed_cidr}'
 
 .PHONY: destroy
 destroy:
 	@echo "💥💥💥💥💥💥🧨💣Destroying...."
 	make init
-	$(RUNNER) terraform -chdir=./terraform terraform destroy -var 'app_image=${REPO_URL}' -var 'image_tag=${TAG}' -var 'hosted_zone_id=${hosted_zone_id}' -var 'domain_name=${domain_name}' -var 'acm_cert_arn=${acm_cert_arn}' -var 'ssh_allowed_cidr=${ssh_allowed_cidr}'
+	$(COMPOSE_RUN_TERRAFORM) -chdir=./terraform terraform destroy -var 'app_image=${REPO_URL}' -var 'image_tag=${TAG}' -var 'hosted_zone_id=${hosted_zone_id}' -var 'domain_name=${domain_name}' -var 'acm_cert_arn=${acm_cert_arn}' -var 'ssh_allowed_cidr=${ssh_allowed_cidr}'
 
 .PHONY: deploy
 deploy:
@@ -41,11 +65,14 @@ deploy:
 	make init
 	make plan
 	make apply
-	cd ../docker/&&make login
-	cd ../docker/&&make build
-	cd ../docker/&&make publish
+	make login
+	make build
+	make publish
 	make deploy-wp
 	@echo 🙌🙃🙌Deployment finished!
+
+cleanDocker:
+	docker-compose down --remove-orphans
 
 # RUN_AWS ?= docker-compose run --rm 3m
 # BUCKET_NAME?=
@@ -65,9 +92,6 @@ deploy:
 # .PHONY:_delete_bucket
 # _delete_bucket:
 # 	bash delete_bucket.sh
-
-cleanDocker:
- 	docker-compose down --remove-orphans
 
 # clean: cleanDocker
 # 	rm -f .env

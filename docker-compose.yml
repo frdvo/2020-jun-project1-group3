@@ -9,3 +9,41 @@ services:
       volumes:
         - .:/3m
       working_dir: /3m
+
+    jq:
+      image: imega/jq
+      # env_file: .env
+      volumes:
+        - .:/opt/app
+      working_dir: /opt/app
+
+    terraform:
+      image: hashicorp/terraform:light
+      # env_file: .env
+      volumes:
+        - .:/opt/app
+      working_dir: /opt/app
+
+    aws:
+      image: amazon/aws-cli
+      # env_file: .env
+      volumes:
+        - .:/opt/app
+      working_dir: /opt/app
+ 
+    curl:
+      image: curlimages/curl
+      # env_file: .env
+      volumes:
+        - .:/opt/app
+      working_dir: /opt/app
+
+    sl:
+      image: github/super-linter
+      environment:
+      - RUN_LOCAL=true
+      # env_file: .env
+      volumes:
+        - .:/tmp/lint
+      working_dir: /tmp/lint
+
