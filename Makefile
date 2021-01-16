@@ -1,11 +1,11 @@
 TAG ?= $(shell git rev-parse --short HEAD)
-REPO_URL ?= $(shell $(COMPOSE_RUN_TERRAFORM) -chdir=./terraform output -json ecr_module | $(COMPOSE_RUN_JQ) .ecr | $(COMPOSE_RUN_JQ) -r .repository_url)
+REPO_URL ?= $(shell $(COMPOSE_RUN_TERRAFORM) -chdir=./terraform output -json ecr_module | $(COMPOSE_RUN_JQ) .ecr.repository_url)
 CONTAINER_NAME ?= webapp
 COMPOSE_RUN_TERRAFORM ?= docker-compose run --rm terraform
 COMPOSE_RUN_AWS ?= docker-compose run --rm aws
 COMPOSE_RUN_JQ ?= docker-compose run --rm jq
 ENVFILE ?= env.template
-acm_cert_arn= ?=
+acm_cert_arn ?=
 AWS_ACCESS_KEY_ID ?=
 AWS_SECRET_ACCESS_KEY ?=
 domain_name ?=
@@ -22,7 +22,7 @@ login:
 .PHONY: build
 build:
 	@echo "🏷️📦🏗️Building and tagging container..."
-	docker build --tag ${REPO_URL}:${TAG} .
+	docker build -f docker/Dockerfile --tag ${REPO_URL}:${TAG} .
 
 .PHONY: publish
 publish:
@@ -71,25 +71,3 @@ deploy:
 
 cleanDocker:
 	docker-compose down --remove-orphans
-
-# RUN_AWS ?= docker-compose run --rm 3m
-# BUCKET_NAME?=
-
-# .PHONY:create_bucket
-# create_bucket:
-# 	BUCKET_NAME=$(BUCKET_NAME) $(RUN_AWS) make _create_bucket
-
-# .PHONY:_create_bucket
-# _create_bucket:
-# 	bash create_bucket.sh
-
-# .PHONY:delete_bucket
-# delete_bucket:
-# 	BUCKET_NAME=$(BUCKET_NAME) $(RUN_AWS) make _delete_bucket
-
-# .PHONY:_delete_bucket
-# _delete_bucket:
-# 	bash delete_bucket.sh
-
-# clean: cleanDocker
-# 	rm -f .env
