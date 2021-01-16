@@ -1,8 +1,10 @@
 TAG ?= $(shell git rev-parse --short HEAD)
-REPO_URL ?= $(shell docker-compose run --rm terraform -chdir=./terraform output -json ecr_module | docker-compose run --rm jq .ecr | docker-compose run --rm jq -r .repository_url)
+REPO_URL ?= $(shell $(COMPOSE_RUN_TERRAFORM) -chdir=./terraform output -json ecr_module | $(COMPOSE_RUN_JQ) .ecr | $(COMPOSE_RUN_JQ) -r .repository_url)
 CONTAINER_NAME ?= webapp
 COMPOSE_RUN_TERRAFORM ?= docker-compose run --rm terraform
 COMPOSE_RUN_AWS ?= docker-compose run --rm aws
+COMPOSE_RUN_JQ ?= docker-compose run --rm jq
+ENVFILE ?= env.template
 acm_cert_arn= ?=
 AWS_ACCESS_KEY_ID ?=
 AWS_SECRET_ACCESS_KEY ?=
@@ -11,10 +13,6 @@ hosted_zone_id ?=
 ssh_allowed_cidr ?=
 tf_backend_bucket ?=
 
-
-# TAG ?= $(shell git rev-parse --short HEAD)
-# REPO_URL ?= $(shell terraform output -json ecr_module | jq .ecr | jq -r .repository_url)
-# CONTAINER_NAME ?= webapp
 
 .PHONY: login
 login:
@@ -34,18 +32,18 @@ publish:
 .PHONY: init
 init:
 	@echo "🏁🚥 Initializing...."
-	AWS_ACCESS_KEY_ID=$(AWS_ACCESS_KEY_ID) AWS_SECRET_ACCESS_KEY=$(AWS_SECRET_ACCESS_KEY) $(COMPOSE_RUN_TERRAFORM) -chdir=./terraform init -backend-config="bucket=${tf_backend_bucket}"
+	$(COMPOSE_RUN_TERRAFORM) -chdir=./terraform init -backend-config="bucket=${tf_backend_bucket}"
 
 .PHONY: plan
 plan:
 	@echo "🌏🚜Planning...."
 	$(COMPOSE_RUN_TERRAFORM) -chdir=./terraform plan -out tf.plan -var 'app_image=${REPO_URL}' -var 'image_tag=${TAG}' -var 'hosted_zone_id=${hosted_zone_id}' -var 'domain_name=${domain_name}' -var 'acm_cert_arn=${acm_cert_arn}' -var 'ssh_allowed_cidr=${ssh_allowed_cidr}'
-	$(COMPOSE_RUN_AWS) aws s3 cp tf.plan s3://${tf_backend_bucket}/
+	$(COMPOSE_RUN_AWS) s3 cp ./terraform/tf.plan s3://${tf_backend_bucket}/
 
 .PHONY: apply
 apply:
 	@echo "⛅🌏🏗️Applying...."
-	$(COMPOSE_RUN_AWS) aws s3 cp s3://${tf_backend_bucket}/tf.plan .
+	$(COMPOSE_RUN_AWS) s3 cp s3://${tf_backend_bucket}/tf.plan .terraform/
 	$(COMPOSE_RUN_TERRAFORM) -chdir=./terraform apply -auto-approve "tf.plan"
 
 .PHONY: deploy-wp
@@ -57,7 +55,7 @@ deploy-wp:
 destroy:
 	@echo "💥💥💥💥💥💥🧨💣Destroying...."
 	make init
-	$(COMPOSE_RUN_TERRAFORM) -chdir=./terraform terraform destroy -var 'app_image=${REPO_URL}' -var 'image_tag=${TAG}' -var 'hosted_zone_id=${hosted_zone_id}' -var 'domain_name=${domain_name}' -var 'acm_cert_arn=${acm_cert_arn}' -var 'ssh_allowed_cidr=${ssh_allowed_cidr}'
+	$(COMPOSE_RUN_TERRAFORM) -chdir=./terraform destroy -var 'app_image=${REPO_URL}' -var 'image_tag=${TAG}' -var 'hosted_zone_id=${hosted_zone_id}' -var 'domain_name=${domain_name}' -var 'acm_cert_arn=${acm_cert_arn}' -var 'ssh_allowed_cidr=${ssh_allowed_cidr}'
 
 .PHONY: deploy
 deploy:
