@@ -1,0 +1,24 @@
+version: "3.8"
+services:
+
+    jq:
+      image: imega/jq
+      env_file: .env
+      volumes:
+        - .:/opt/app
+      working_dir: /opt/app
+
+    terraform:
+      image: hashicorp/terraform:light
+      env_file: .env
+      volumes:
+        - .:/opt/app
+      working_dir: /opt/app
+
+    aws:
+      image: amazon/aws-cli
+      env_file: .env
+      volumes:
+        - .:/opt/app
+      working_dir: /opt/app
+
