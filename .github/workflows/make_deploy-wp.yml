@@ -23,7 +23,6 @@ jobs:
     defaults:
       run:
         shell: bash
-        #working-directory: terraform
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
@@ -45,11 +44,9 @@ jobs:
         domain_name: ${{ secrets.DOMAIN_NAME }}
         acm_cert_arn: ${{ secrets.ACM_CERT_ARN }}
       run: |
-        cd terraform
+        docker-compose pull
         make init
-        cd ../docker
         make login
         make build
         make publish
-        cd ../terraform
         make deploy-wp
