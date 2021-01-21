@@ -23,7 +23,7 @@ jobs:
     defaults:
       run:
         shell: bash
-        working-directory: terraform
+        working-directory: /
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
@@ -45,5 +45,6 @@ jobs:
         domain_name: ${{ secrets.DOMAIN_NAME }}
         acm_cert_arn: ${{ secrets.ACM_CERT_ARN }}
       run: |
+        docker-compose push
         make init
         make plan
