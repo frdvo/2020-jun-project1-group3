@@ -45,6 +45,6 @@ jobs:
         domain_name: ${{ secrets.DOMAIN_NAME }}
         acm_cert_arn: ${{ secrets.ACM_CERT_ARN }}
       run: |
-        docker-compose push
+        docker-compose pull
         make init
         make plan
