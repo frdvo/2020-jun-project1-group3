@@ -5,14 +5,14 @@ name: make_publish
 # Controls when the action will run. Triggers the workflow on push or pull request
 # events but only for the master branch
 on:
-  push:
-    paths:
-     - "docker/**"
-    branches:
-     - "!master"
-  # pull_request:
-  #   paths:
-  #    - "terraform/**"
+  # push:
+   # paths:
+   #  - "docker/**"
+   # branches:
+   #  - "!master"
+   pull_request:
+     paths:
+      - "docker/**"
   #   branches: [ master ]
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
@@ -47,9 +47,7 @@ jobs:
         domain_name: ${{ secrets.DOMAIN_NAME }}
         acm_cert_arn: ${{ secrets.ACM_CERT_ARN }}
       run: |
-        cd terraform
-        make init
-        cd ../docker
+        docker-compose pull
         make login
         make build
         make publish
