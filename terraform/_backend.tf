@@ -1,6 +1,3 @@
-
-
-
 terraform {
   backend "s3" {
     key    = "da/project3"
