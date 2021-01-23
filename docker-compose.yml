@@ -2,21 +2,21 @@ version: "3.7"
 services:
 
     jq:
-      image: imega/jq
+      image: imega/jq:1.6
       env_file: .env
       volumes:
         - .:/opt/app
       working_dir: /opt/app
 
     terraform:
-      image: hashicorp/terraform:light
+      image: hashicorp/terraform:0.14.5
       env_file: .env
       volumes:
         - .:/opt/app
       working_dir: /opt/app
 
     aws:
-      image: amazon/aws-cli
+      image: amazon/aws-cli:2.1.21
       env_file: .env
       volumes:
         - .:/opt/app
