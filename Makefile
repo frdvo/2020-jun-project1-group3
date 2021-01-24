@@ -37,19 +37,19 @@ init:
 .PHONY: plan
 plan:
 	@echo "🌏🚜Planning...."
-	$(COMPOSE_RUN_TERRAFORM) -chdir=./terraform plan -out tf.plan -var 'app_image=${REPO_URL}' -var 'image_tag=${TAG}' -var 'hosted_zone_id=${hosted_zone_id}' -var 'domain_name=${domain_name}' -var 'acm_cert_arn=${acm_cert_arn}' -var 'ssh_allowed_cidr=${ssh_allowed_cidr}'
+	$(COMPOSE_RUN_TERRAFORM) -chdir=./terraform plan -out tf.plan -var 'image_tag=${TAG}' -var 'hosted_zone_id=${hosted_zone_id}' -var 'domain_name=${domain_name}' -var 'acm_cert_arn=${acm_cert_arn}' -var 'ssh_allowed_cidr=${ssh_allowed_cidr}'
 	$(COMPOSE_RUN_AWS) s3 cp ./terraform/tf.plan s3://${tf_backend_bucket}/
 
 .PHONY: apply
 apply:
 	@echo "⛅🌏🏗️Applying...."
 	$(COMPOSE_RUN_AWS) s3 cp s3://${tf_backend_bucket}/tf.plan .terraform/
-	$(COMPOSE_RUN_TERRAFORM) -chdir=./terraform apply -auto-approve "tf.plan"
+	$(COMPOSE_RUN_TERRAFORM) -chdir=./terraform apply "tf.plan"
 
 .PHONY: deploy-wp
 deploy-wp:
 	@echo "📦🏗️⛅Deploying Wordpress customized image..."
-	$(COMPOSE_RUN_TERRAFORM) -chdir=./terraform apply -auto-approve -var 'image_tag=${TAG}' -var 'hosted_zone_id=${hosted_zone_id}' -var 'domain_name=${domain_name}' -var 'acm_cert_arn=${acm_cert_arn}' -var 'ssh_allowed_cidr=${ssh_allowed_cidr}'
+	$(COMPOSE_RUN_TERRAFORM) -chdir=./terraform apply -auto-approve -var 'app_image=${REPO_URL}' -var 'image_tag=${TAG}' -var 'hosted_zone_id=${hosted_zone_id}' -var 'domain_name=${domain_name}' -var 'acm_cert_arn=${acm_cert_arn}' -var 'ssh_allowed_cidr=${ssh_allowed_cidr}'
 
 .PHONY: destroy
 destroy:
