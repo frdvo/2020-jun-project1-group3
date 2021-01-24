@@ -12,8 +12,8 @@ services:
       image: hashicorp/terraform:0.14.5
       env_file: .env
       volumes:
-        - .:/opt/app
-      working_dir: /opt/app
+        - .:/root
+      working_dir: /root
 
     aws:
       image: amazon/aws-cli:2.1.21
