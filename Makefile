@@ -1,5 +1,5 @@
 TAG ?= $(shell git rev-parse --short HEAD)
-REPO_URL ?= $(shell $(COMPOSE_RUN_TERRAFORM) -chdir=./terraform output -json ecr_module 2> /dev/null | $(COMPOSE_RUN_JQ) .ecr.repository_url 2> /dev/null)
+REPO_URL ?= $(shell $(COMPOSE_RUN_TERRAFORM) -chdir=./terraform output -json ecr_module | $(COMPOSE_RUN_JQ) .ecr.repository_url)
 CONTAINER_NAME ?= webapp
 COMPOSE_RUN_TERRAFORM ?= docker-compose run --rm terraform
 COMPOSE_RUN_AWS ?= docker-compose run --rm aws
@@ -49,7 +49,7 @@ apply:
 .PHONY: deploy-wp
 deploy-wp:
 	@echo "📦🏗️⛅Deploying Wordpress customized image..."
-	$(COMPOSE_RUN_TERRAFORM) -chdir=./terraform apply -auto-approve -var 'app_image=${REPO_URL}' -var 'image_tag=${TAG}' -var 'hosted_zone_id=${hosted_zone_id}' -var 'domain_name=${domain_name}' -var 'acm_cert_arn=${acm_cert_arn}' -var 'ssh_allowed_cidr=${ssh_allowed_cidr}'
+	$(COMPOSE_RUN_TERRAFORM) -chdir=./terraform apply -auto-approve -var 'image_tag=${TAG}' -var 'hosted_zone_id=${hosted_zone_id}' -var 'domain_name=${domain_name}' -var 'acm_cert_arn=${acm_cert_arn}' -var 'ssh_allowed_cidr=${ssh_allowed_cidr}'
 
 .PHONY: destroy
 destroy:
