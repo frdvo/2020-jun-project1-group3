@@ -63,7 +63,7 @@ variable "fargate_cpu" {
 
 variable "fargate_memory" {
   description = "Fargate instance memory to provision (in MiB)"
-  default     = "512"
+  default     = "256"
 }
 
 variable "efs_access_point" {
