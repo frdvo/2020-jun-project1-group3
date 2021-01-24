@@ -16,7 +16,7 @@ services:
       working_dir: /opt/app
 
     aws:
-      image: amazon/aws-cli:2.1.21
+      image: amazon/aws-cli:2.1.15
       env_file: .env
       volumes:
         - .:/opt/app
