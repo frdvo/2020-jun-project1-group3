@@ -16,7 +16,7 @@ services:
       working_dir: /opt/app
 
     aws:
-      image: mesosphere/aws-cli
+      image: amazon/aws-cli:2.1.21
       env_file: .env
       volumes:
         - .:/opt/app
