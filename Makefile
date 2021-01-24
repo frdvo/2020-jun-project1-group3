@@ -44,7 +44,7 @@ plan:
 .PHONY: apply
 apply:
 	@echo "⛅🌏🏗️Applying...."
-	$(COMPOSE_RUN_AWS) s3 cp s3://${tf_backend_bucket}/tf.plan .terraform/
+	$(COMPOSE_RUN_AWS) s3 cp s3://${tf_backend_bucket}/tf.plan ./terraform/
 	$(COMPOSE_RUN_TERRAFORM) -chdir=./terraform apply -auto-approve "tf.plan"
 
 .PHONY: deploy-wp
