@@ -27,6 +27,7 @@ variable "app_image" {
 
 variable "image_tag" {
   type    = string
+  default = "0"
 }
 
 variable "domain_name" {
