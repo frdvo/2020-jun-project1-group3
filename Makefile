@@ -1,5 +1,5 @@
 TAG ?= $(shell git rev-parse --short HEAD)
-REPO_URL ?= $(shell $(COMPOSE_RUN_TERRAFORM) -chdir=./terraform output -json ecr_module 2> /dev/null | $(COMPOSE_RUN_JQ) .ecr.repository_url 2> /dev/null)
+REPO_URL ?= $(shell $(COMPOSE_RUN_TERRAFORM) -chdir=./terraform output -json ecr_module | $(COMPOSE_RUN_JQ) .ecr.repository_url)
 CONTAINER_NAME ?= webapp
 COMPOSE_RUN_TERRAFORM ?= docker-compose run --rm terraform
 COMPOSE_RUN_AWS ?= docker-compose run --rm aws
