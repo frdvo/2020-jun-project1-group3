@@ -1,5 +1,3 @@
-TAG ?= $(shell git rev-parse --short HEAD)
-REPO_URL ?= $(shell $(COMPOSE_RUN_TERRAFORM) -chdir=./terraform output -json ecr_module | $(COMPOSE_RUN_JQ) .ecr.repository_url)
 CONTAINER_NAME ?= webapp
 COMPOSE_RUN_TERRAFORM ?= docker-compose run --rm terraform
 COMPOSE_RUN_AWS ?= docker-compose run --rm aws
@@ -11,14 +9,16 @@ AWS_REGION ?=
 AWS_SECRET_ACCESS_KEY ?=
 domain_name ?=
 hosted_zone_id ?=
+REPO_URL ?= $(shell $(COMPOSE_RUN_TERRAFORM) -chdir=./terraform output -json ecr_module | $(COMPOSE_RUN_JQ) .ecr.repository_url)
 ssh_allowed_cidr ?=
 tf_backend_bucket ?=
+TAG ?= $(shell git rev-parse --short HEAD)
 
 
 .PHONY: login
 login:
 	@echo "🏗Retrieving an authentication token and authenticate your Docker client to your registry"
-	$(COMPOSE_RUN_AWS) ecr get-login-password --region ap-southeast-2 | docker login --username AWS --password-stdin ${REPO_URL}
+	$(COMPOSE_RUN_AWS) ecr get-login-password --region $(AWS_REGION) | docker login --username AWS --password-stdin ${REPO_URL}
 
 .PHONY: build
 build:
