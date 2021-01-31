@@ -7,7 +7,7 @@ on:
     branches: [ master ]
 
 jobs:
-  build:
+  terraform_apply:
     runs-on: ubuntu-20.04
     defaults:
       run:

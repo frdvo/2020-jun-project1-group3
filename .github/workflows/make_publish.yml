@@ -6,7 +6,7 @@ on:
       - "docker/**"
 
 jobs:
-  build:
+  publish_wordpress:
     runs-on: ubuntu-20.04
     defaults:
       run:
