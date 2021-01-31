@@ -1,1 +1,1 @@
-FROM wordpress:5.6.0-php7.4-apache
+FROM wordpress:php8.0-fpm-alpine
