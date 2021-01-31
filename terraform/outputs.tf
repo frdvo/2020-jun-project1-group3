@@ -18,3 +18,7 @@ output "ecr_module" {
 output "ecs_module" {
   value = module.ecs
 }
+
+output "domain_name" {
+  value = var.domain_name
+}
