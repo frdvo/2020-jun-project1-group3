@@ -49,6 +49,7 @@ jobs:
         acm_cert_arn: ${{ secrets.ACM_CERT_ARN }}
       run: |
         docker-compose pull
+        make init
         make login
         make build
         make publish
