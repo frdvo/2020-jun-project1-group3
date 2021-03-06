@@ -17,7 +17,7 @@ variable "repository_name" {
 }
 
 variable "ssh_allowed_cidr" {
-  type    = string
+  type = string
 }
 
 variable "app_image" {
@@ -26,17 +26,17 @@ variable "app_image" {
 }
 
 variable "image_tag" {
-  type    = string
+  type = string
 }
 
 variable "domain_name" {
-  type    = string
+  type = string
 }
 
 variable "hosted_zone_id" {
-  type    = string
+  type = string
 }
 
 variable "acm_cert_arn" {
-  type    = string
+  type = string
 }
